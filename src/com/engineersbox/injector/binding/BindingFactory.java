@@ -23,23 +23,22 @@ public class BindingFactory {
         this.requestedBindings = new HashSet<>();
     }
 
-    public BindingFactory setInjectionSource(final String filename) throws FileNotFoundException {
-        this.injectionSource = new ConfigurationProperties(filename);
+    public BindingFactory setInjectionSource(final String filename) {
+        try {
+            this.injectionSource = new ConfigurationProperties(filename);
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());;
+        }
         return this;
     }
 
-    public BindingFactory requestBinding(final Class<?> class_to_bind) {
-        this.requestedBindings.add(class_to_bind);
-        return this;
-    }
-
-    public BindingFactory requestBinding(final Class<?> ...classes_to_bind) {
+    public BindingFactory requestStaticInjection(final Class<?> ...classes_to_bind) {
         this.requestedBindings.addAll(Arrays.asList(classes_to_bind));
         return this;
     }
 
-    private Optional<ConfigProperty> getConfigPropertyAnnotation(final Class<? extends Annotation> injectorAnnotation) {
-        for (Annotation annotation : injectorAnnotation.getAnnotations()) {
+    private Optional<ConfigProperty> getConfigPropertyAnnotation(final Field field) {
+        for (Annotation annotation : field.getAnnotations()) {
             if (!annotation.annotationType().equals(ConfigProperty.class)) {
                 continue;
             }
@@ -48,13 +47,13 @@ public class BindingFactory {
         return Optional.empty();
     }
 
-    private Optional<AnnotationBindingPair<Inject, String>> hasInjectorAnnotations(final Field field, final Class<?> rootClass) {
+    private Optional<AnnotationBindingPair<Inject, String>> getInjectorAnnotations(final Field field, final Class<?> rootClass) {
         for (Annotation annotationClass : field.getAnnotations()) {
             final Class<? extends Annotation> annotationType = annotationClass.annotationType();
             if (!annotationType.equals(Inject.class)) {
                 continue;
             }
-            final Optional<ConfigProperty> configPropertyAnnotation = getConfigPropertyAnnotation(annotationType);
+            final Optional<ConfigProperty> configPropertyAnnotation = getConfigPropertyAnnotation(field);
             if (!configPropertyAnnotation.isPresent()) {
                 throw new MissingConfigPropertyAnnotationException(rootClass);
             }
@@ -63,14 +62,14 @@ public class BindingFactory {
         return Optional.empty();
     }
 
-    private <T> void setFieldWithValue(final Field field, final T value, final Class<?> clazz) {
+    private <T> void setFieldWithValue(final Field field, final T value, final Class<?> clazz, final boolean optional) {
         field.setAccessible(true);
-        if (value == null) {
+        if (!optional && value == null) {
             throw new NullObjectInjectionException(field);
         }
         try {
-            field.set(clazz, field.getType().cast(value));
-        } catch (ClassCastException e) {
+            field.set(clazz.newInstance(), value == null ? field.getType().newInstance() : field.getType().cast(value));
+        } catch (ClassCastException | InstantiationException e) {
             throw new FieldValueTypeCoercionException(value, field.getType());
         } catch (IllegalAccessException e) {
             throw new FinalFieldInjectionException(field, value);
@@ -80,16 +79,13 @@ public class BindingFactory {
     private void saturateClassFields(final Class<?> clazz) {
         final Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-            Optional<AnnotationBindingPair<Inject, String>> hasAnnotation = hasInjectorAnnotations(field, clazz);
+            Optional<AnnotationBindingPair<Inject, String>> hasAnnotation = getInjectorAnnotations(field, clazz);
             if (!hasAnnotation.isPresent()) {
                 continue;
             }
             final AnnotationBindingPair<Inject, String> annotationBindingPair = hasAnnotation.get();
             final String configPropertyValue = annotationBindingPair.right;
-            if (annotationBindingPair.left.optional() && (configPropertyValue == null || configPropertyValue.equalsIgnoreCase(""))) {
-                continue;
-            }
-            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), clazz);
+            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), clazz, annotationBindingPair.left.optional());
         }
     }
 
