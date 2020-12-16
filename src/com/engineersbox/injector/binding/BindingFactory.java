@@ -9,7 +9,6 @@ import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationExcep
 import com.engineersbox.injector.exceptions.NullObjectInjectionException;
 
 import java.io.FileNotFoundException;
-import java.io.InvalidObjectException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -27,7 +26,7 @@ public class BindingFactory {
         try {
             this.injectionSource = new ConfigurationProperties(filename);
         } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());;
+            System.out.println(e.getMessage());
         }
         return this;
     }
