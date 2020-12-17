@@ -62,10 +62,10 @@ public class BindingFactory {
     }
 
     private <T> void setFieldWithValue(final Field field, final T value, final Class<?> clazz, final boolean optional) {
-        field.setAccessible(true);
         if (!optional && value == null) {
             throw new NullObjectInjectionException(field);
         }
+        field.setAccessible(true);
         try {
             field.set(clazz.newInstance(), value == null ? field.getType().newInstance() : field.getType().cast(value));
         } catch (ClassCastException | InstantiationException e) {
