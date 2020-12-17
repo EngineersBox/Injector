@@ -1,8 +1,6 @@
 package com.engineersbox.injector;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Properties;
 
 public class ConfigurationProperties {
@@ -10,13 +8,9 @@ public class ConfigurationProperties {
 
     public ConfigurationProperties(final String filepath) throws FileNotFoundException {
         this.properties = new Properties();
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(filepath);
+        InputStream inputStream = new FileInputStream(filepath);
         try {
-            if (inputStream != null) {
-                this.properties.load(inputStream);
-            } else {
-                throw new FileNotFoundException("property file '" + filepath + "' not found");
-            }
+            this.properties.load(inputStream);
         } catch (IOException e) {
             throw new FileNotFoundException("property file '" + filepath + "' not found");
         }

@@ -1,11 +1,11 @@
 package com.engineersbox.injector.binding;
 
-import com.engineersbox.injector.ConfigurationProperties;
 import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
 import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
-import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
 import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
+import com.engineersbox.injector.ConfigurationProperties;
+import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
 import com.engineersbox.injector.exceptions.NullObjectInjectionException;
 
 import java.io.FileNotFoundException;
