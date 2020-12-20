@@ -8,7 +8,7 @@ import com.engineersbox.injector.exceptions.NullObjectInjectionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class BindingFactoryTests {
+public class StaticBindingFactoryTests {
 
     static class Field1 {
         @ConfigProperty(property = "field1")
@@ -23,9 +23,9 @@ public class BindingFactoryTests {
     @Test
     public void canStaticInjectValidPropertyToField() {
         Field1 source = new Field1();
-        new BindingFactory()
+        new StaticBindingFactory()
                 .setInjectionSource("resources/configuration.properties")
-                .requestStaticInjection(Field1.class)
+                .requestInjection(Field1.class)
                 .build();
         Assertions.assertEquals(source.getField(), "field1");
     }
@@ -43,9 +43,9 @@ public class BindingFactoryTests {
     @Test
     public void doesNotThrowWhenMissingPropertyWhenOptional() {
         Field2 source = new Field2();
-        new BindingFactory()
+        new StaticBindingFactory()
                 .setInjectionSource("resources/configuration.properties")
-                .requestStaticInjection(Field2.class)
+                .requestInjection(Field2.class)
                 .build();
         Assertions.assertNotNull(source.getField());
     }
@@ -64,9 +64,9 @@ public class BindingFactoryTests {
     public void throwsWhenMissingPropertyWhenNotOptional() {
         Field3 source = new Field3();
         Assertions.assertThrows(NullObjectInjectionException.class, () -> {
-            new BindingFactory()
+            new StaticBindingFactory()
                     .setInjectionSource("resources/configuration.properties")
-                    .requestStaticInjection(Field3.class)
+                    .requestInjection(Field3.class)
                     .build();
         });
     }
@@ -84,9 +84,9 @@ public class BindingFactoryTests {
     public void throwsWhenMissingPropertyAnnotationWithInjector() {
         Field4 source = new Field4();
         Assertions.assertThrows(MissingConfigPropertyAnnotationException.class, () -> {
-            new BindingFactory()
+            new StaticBindingFactory()
                     .setInjectionSource("resources/configuration.properties")
-                    .requestStaticInjection(Field4.class)
+                    .requestInjection(Field4.class)
                     .build();
         });
     }
@@ -105,9 +105,9 @@ public class BindingFactoryTests {
     public void throwsWhenFieldIsFinal() {
         Field5 source = new Field5();
         Assertions.assertThrows(FinalFieldInjectionException.class, () -> {
-            new BindingFactory()
+            new StaticBindingFactory()
                     .setInjectionSource("resources/configuration.properties")
-                    .requestStaticInjection(Field5.class)
+                    .requestInjection(Field5.class)
                     .build();
         });
     }
