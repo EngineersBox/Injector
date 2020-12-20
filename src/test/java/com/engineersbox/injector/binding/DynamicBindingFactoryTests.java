@@ -8,12 +8,12 @@ import com.engineersbox.injector.exceptions.NullObjectInjectionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class StaticBindingFactoryTests {
+public class DynamicBindingFactoryTests {
 
     static class Field1 {
         @ConfigProperty(property = "field1")
         @Inject
-        private static String field1;
+        private String field1;
         
         public String getField() {
             return field1;
@@ -21,19 +21,21 @@ public class StaticBindingFactoryTests {
     }
 
     @Test
-    public void canStaticInjectValidPropertyToField() {
+    public void canDynamicInjectValidPropertyToField() {
         Field1 source = new Field1();
-        new StaticBindingFactory()
-                .setInjectionSource("resources/statictests.properties")
-                .requestInjection(Field1.class)
+        Field1 source2 = new Field1();
+        new DynamicBindingFactory()
+                .setInjectionSource("resources/dynamictests.properties")
+                .requestInjection(Field1.class, source)
                 .build();
         Assertions.assertEquals(source.getField(), "field1");
+        Assertions.assertNull(source2.getField());
     }
 
     static class Field2 {
         @ConfigProperty(property = "field2")
         @Inject(optional = true)
-        private static String field2;
+        private String field2;
 
         public String getField() {
             return field2;
@@ -43,17 +45,19 @@ public class StaticBindingFactoryTests {
     @Test
     public void doesNotThrowWhenMissingPropertyWhenOptional() {
         Field2 source = new Field2();
-        new StaticBindingFactory()
-                .setInjectionSource("resources/statictests.properties")
-                .requestInjection(Field2.class)
+        Field2 source2 = new Field2();
+        new DynamicBindingFactory()
+                .setInjectionSource("resources/dynamictests.properties")
+                .requestInjection(Field2.class, source)
                 .build();
         Assertions.assertNotNull(source.getField());
+        Assertions.assertNull(source2.getField());
     }
 
     static class Field3 {
         @ConfigProperty(property = "field3")
         @Inject
-        private static String field3;
+        private String field3;
 
         public String getField() {
             return field3;
@@ -64,16 +68,16 @@ public class StaticBindingFactoryTests {
     public void throwsWhenMissingPropertyWhenNotOptional() {
         Field3 source = new Field3();
         Assertions.assertThrows(NullObjectInjectionException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field3.class)
+            new DynamicBindingFactory()
+                    .setInjectionSource("resources/dynamictests.properties")
+                    .requestInjection(Field3.class, source)
                     .build();
         });
     }
 
     static class Field4 {
         @Inject
-        private static String field4;
+        private String field4;
 
         public String getField() {
             return field4;
@@ -84,9 +88,9 @@ public class StaticBindingFactoryTests {
     public void throwsWhenMissingPropertyAnnotationWithInjector() {
         Field4 source = new Field4();
         Assertions.assertThrows(MissingConfigPropertyAnnotationException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field4.class)
+            new DynamicBindingFactory()
+                    .setInjectionSource("resources/dynamictests.properties")
+                    .requestInjection(Field4.class, source)
                     .build();
         });
     }
@@ -94,7 +98,7 @@ public class StaticBindingFactoryTests {
     static class Field5 {
         @ConfigProperty(property = "field5")
         @Inject
-        private static final String field5 = "";
+        private final String field5 = "";
 
         public String getField() {
             return field5;
@@ -105,9 +109,9 @@ public class StaticBindingFactoryTests {
     public void throwsWhenFieldIsFinal() {
         Field5 source = new Field5();
         Assertions.assertThrows(FinalFieldInjectionException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field5.class)
+            new DynamicBindingFactory()
+                    .setInjectionSource("resources/dynamictests.properties")
+                    .requestInjection(Field5.class, source)
                     .build();
         });
         Assertions.assertEquals(source.getField(), "");
