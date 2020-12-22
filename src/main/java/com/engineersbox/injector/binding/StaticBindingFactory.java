@@ -21,6 +21,8 @@ public class StaticBindingFactory extends BindingFactory {
 
     public StaticBindingFactory(){
         this.requestedBindings = new HashSet<>();
+        this.modifiersRequiredToExist = Collections.singletonList(Modifier.STATIC);
+        this.modifiersRequiredToNotExist = Collections.singletonList(Modifier.FINAL);
     }
 
     @Override
@@ -38,23 +40,6 @@ public class StaticBindingFactory extends BindingFactory {
         return this;
     }
 
-    private <T> void setFieldWithValue(final Field field, final T value, final Class<?> clazz, final boolean optional) {
-        if (!optional && value == null) {
-            throw new NullObjectInjectionException(field);
-        }
-        if (Modifier.isFinal(field.getModifiers()) || !Modifier.isStatic(field.getModifiers())) {
-            throw new FinalFieldInjectionException(field, value);
-        }
-        field.setAccessible(true);
-        try {
-            field.set(clazz.newInstance(), value == null ? field.getType().newInstance() : field.getType().cast(value));
-        } catch (ClassCastException | InstantiationException e) {
-            throw new FieldValueTypeCoercionException(value, field.getType());
-        } catch (IllegalAccessException e) {
-            throw new FinalFieldInjectionException(field, value);
-        }
-    }
-
     private void saturateClassFields(final Class<?> clazz) {
         final Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
@@ -64,7 +49,7 @@ public class StaticBindingFactory extends BindingFactory {
             }
             final Pair<Inject, String> pair = hasAnnotation.get();
             final String configPropertyValue = pair.right;
-            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), clazz, pair.left.optional());
+            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), new Pair<>(clazz, Optional.empty()), pair.left.optional());
         }
     }
 
