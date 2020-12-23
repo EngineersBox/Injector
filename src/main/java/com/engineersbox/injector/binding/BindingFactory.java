@@ -1,5 +1,7 @@
 package com.engineersbox.injector.binding;
 
+import com.engineersbox.injector.ConfigurationProperties;
+import com.engineersbox.injector.group.InjectionGroup;
 import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
 import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
@@ -17,6 +19,7 @@ public abstract class BindingFactory {
 
     List<Integer> modifiersRequiredToExist;
     List<Integer> modifiersRequiredToNotExist;
+    ConfigurationProperties injectionSource;
 
     abstract BindingFactory setInjectionSource(final String filename);
 
@@ -52,7 +55,7 @@ public abstract class BindingFactory {
         return requiredExist && requiredNotExist;
     }
 
-    <T> void setFieldWithValue(final Field field, final T value, final Pair<Class<?>, Optional<Object>> binding_pair, final boolean optional) {
+    <T> void setFieldWithValue(final Field field, final T value, final InjectionGroup binding_pair, final boolean optional) {
         if (!optional && value == null) {
             throw new NullObjectInjectionException(field);
         }
@@ -73,6 +76,21 @@ public abstract class BindingFactory {
             throw new FinalFieldInjectionException(field, value);
         }
     }
+
+    void saturateClassFields(final InjectionGroup binding_pair) {
+        final Field[] fields = binding_pair.getLeft().getDeclaredFields();
+        for (final Field field : fields) {
+            Optional<Pair<Inject, String>> hasAnnotation = getInjectorAnnotations(field, binding_pair.getLeft());
+            if (!hasAnnotation.isPresent()) {
+                continue;
+            }
+            final Pair<Inject, String> pair = hasAnnotation.get();
+            final String configPropertyValue = pair.getRight();
+            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.getLeft().optional());
+        }
+    }
+
+    abstract BindingFactory requestInjection(final InjectionGroup ...bindings);
 
     abstract void build();
 

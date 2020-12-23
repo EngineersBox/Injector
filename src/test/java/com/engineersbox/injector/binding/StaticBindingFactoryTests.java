@@ -1,5 +1,6 @@
 package com.engineersbox.injector.binding;
 
+import com.engineersbox.injector.group.InjectionGroup;
 import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
 import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
@@ -25,7 +26,7 @@ public class StaticBindingFactoryTests {
         Field1 source = new Field1();
         new StaticBindingFactory()
                 .setInjectionSource("resources/statictests.properties")
-                .requestInjection(Field1.class)
+                .requestInjection(InjectionGroup.of(Field1.class))
                 .build();
         Assertions.assertEquals(source.getField(), "field1");
     }
@@ -41,67 +42,86 @@ public class StaticBindingFactoryTests {
     }
 
     @Test
-    public void doesNotThrowWhenMissingPropertyWhenOptional() {
-        Field2 source = new Field2();
+    public void canStaticInjectMultipleValidPropertyToField() {
+        Field1 source = new Field1();
+        Field2 source2 = new Field2();
         new StaticBindingFactory()
                 .setInjectionSource("resources/statictests.properties")
-                .requestInjection(Field2.class)
+                .requestInjection(
+                    InjectionGroup.of(Field1.class),
+                    InjectionGroup.of(Field2.class)
+                )
                 .build();
-        Assertions.assertNotNull(source.getField());
+        Assertions.assertEquals(source.getField(), "field1");
+        Assertions.assertEquals(source2.getField(), "field2");
     }
 
     static class Field3 {
         @ConfigProperty(property = "field3")
-        @Inject
+        @Inject(optional = true)
         private static String field3;
+
+        public String getField() {
+            return field3;
+        }
     }
 
     @Test
-    public void throwsWhenMissingPropertyWhenNotOptional() {
+    public void doesNotThrowWhenMissingPropertyWhenOptional() {
         Field3 source = new Field3();
-        Assertions.assertThrows(NullObjectInjectionException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field3.class)
-                    .build();
-        });
+        new StaticBindingFactory()
+                .setInjectionSource("resources/statictests.properties")
+                .requestInjection(InjectionGroup.of(Field3.class))
+                .build();
+        Assertions.assertNotNull(source.getField());
     }
 
     static class Field4 {
+        @ConfigProperty(property = "field3")
         @Inject
         private static String field4;
     }
 
     @Test
-    public void throwsWhenMissingPropertyAnnotationWithInjector() {
+    public void throwsWhenMissingPropertyWhenNotOptional() {
         Field4 source = new Field4();
-        Assertions.assertThrows(MissingConfigPropertyAnnotationException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field4.class)
-                    .build();
-        });
+        Assertions.assertThrows(NullObjectInjectionException.class, () -> new StaticBindingFactory()
+                .setInjectionSource("resources/statictests.properties")
+                .requestInjection(InjectionGroup.of(Field4.class))
+                .build());
     }
 
     static class Field5 {
-        @ConfigProperty(property = "field5")
         @Inject
-        private static final String field5 = "";
+        private static String field5;
+    }
+
+    @Test
+    public void throwsWhenMissingPropertyAnnotationWithInjector() {
+        Field5 source = new Field5();
+        Assertions.assertThrows(MissingConfigPropertyAnnotationException.class, () -> new StaticBindingFactory()
+                .setInjectionSource("resources/statictests.properties")
+                .requestInjection(InjectionGroup.of(Field5.class))
+                .build());
+    }
+
+    static class Field6 {
+        @ConfigProperty(property = "field6")
+        @Inject
+        private static final String field6 = "";
 
         public String getField() {
-            return field5;
+            return field6;
         }
     }
 
     @Test
     public void throwsWhenFieldIsFinal() {
-        Field5 source = new Field5();
-        Assertions.assertThrows(FinalFieldInjectionException.class, () -> {
-            new StaticBindingFactory()
-                    .setInjectionSource("resources/statictests.properties")
-                    .requestInjection(Field5.class)
-                    .build();
-        });
+        Field6 source = new Field6();
+        Assertions.assertThrows(FinalFieldInjectionException.class, () -> new StaticBindingFactory()
+                .setInjectionSource("resources/statictests.properties")
+                .requestInjection(InjectionGroup.of(Field6.class))
+                .build());
         Assertions.assertEquals(source.getField(), "");
     }
 }
