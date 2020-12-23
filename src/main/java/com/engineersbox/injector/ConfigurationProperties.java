@@ -12,7 +12,7 @@ public class ConfigurationProperties {
         try {
             this.properties.load(inputStream);
         } catch (IOException e) {
-            throw new FileNotFoundException("property file '" + filepath + "' not found");
+            throw new FileNotFoundException("Property file '" + filepath + "' not found");
         }
     }
 }

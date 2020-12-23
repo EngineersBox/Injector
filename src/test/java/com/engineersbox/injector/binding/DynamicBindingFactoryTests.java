@@ -58,10 +58,6 @@ public class DynamicBindingFactoryTests {
         @ConfigProperty(property = "field3")
         @Inject
         private String field3;
-
-        public String getField() {
-            return field3;
-        }
     }
 
     @Test
@@ -78,10 +74,6 @@ public class DynamicBindingFactoryTests {
     static class Field4 {
         @Inject
         private String field4;
-
-        public String getField() {
-            return field4;
-        }
     }
 
     @Test

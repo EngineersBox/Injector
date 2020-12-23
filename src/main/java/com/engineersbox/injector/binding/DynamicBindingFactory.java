@@ -1,15 +1,10 @@
 package com.engineersbox.injector.binding;
 
 import com.engineersbox.injector.ConfigurationProperties;
-import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
-import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
-import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
-import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
-import com.engineersbox.injector.exceptions.NullObjectInjectionException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.FileNotFoundException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
@@ -39,26 +34,26 @@ public class DynamicBindingFactory extends BindingFactory{
     }
 
     public DynamicBindingFactory requestInjection(final Class<?> class_to_bind, final Object object_to_bind) {
-        this.requestedBindings.add(new Pair<>(class_to_bind, Optional.of(object_to_bind)));
+        this.requestedBindings.add(Pair.of(class_to_bind, Optional.of(object_to_bind)));
         return this;
     }
 
     private void saturateClassFields(final Pair<Class<?>, Optional<Object>> binding_pair) {
-        final Field[] fields = binding_pair.left.getDeclaredFields();
-        for (Field field : fields) {
-            Optional<Pair<Inject, String>> hasAnnotation = getInjectorAnnotations(field, binding_pair.left);
+        final Field[] fields = binding_pair.getLeft().getDeclaredFields();
+        for (final Field field : fields) {
+            Optional<Pair<Inject, String>> hasAnnotation = getInjectorAnnotations(field, binding_pair.getLeft());
             if (!hasAnnotation.isPresent()) {
                 continue;
             }
             final Pair<Inject, String> pair = hasAnnotation.get();
-            final String configPropertyValue = pair.right;
-            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.left.optional());
+            final String configPropertyValue = pair.getRight();
+            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.getLeft().optional());
         }
     }
 
     @Override
     public void build() {
-        for (Pair<Class<?>, Optional<Object>> bindingPair : this.requestedBindings) {
+        for (final Pair<Class<?>, Optional<Object>> bindingPair : this.requestedBindings) {
             saturateClassFields(bindingPair);
         }
     }

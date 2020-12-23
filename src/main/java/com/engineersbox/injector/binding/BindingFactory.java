@@ -6,6 +6,7 @@ import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
 import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
 import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
 import com.engineersbox.injector.exceptions.NullObjectInjectionException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -20,7 +21,7 @@ public abstract class BindingFactory {
     abstract BindingFactory setInjectionSource(final String filename);
 
     Optional<ConfigProperty> getConfigPropertyAnnotation(final Field field) {
-        for (Annotation annotation : field.getAnnotations()) {
+        for (final Annotation annotation : field.getAnnotations()) {
             if (!annotation.annotationType().equals(ConfigProperty.class)) {
                 continue;
             }
@@ -30,7 +31,7 @@ public abstract class BindingFactory {
     }
 
     Optional<Pair<Inject, String>> getInjectorAnnotations(final Field field, final Class<?> rootClass) {
-        for (Annotation annotationClass : field.getAnnotations()) {
+        for (final Annotation annotationClass : field.getAnnotations()) {
             final Class<? extends Annotation> annotationType = annotationClass.annotationType();
             if (!annotationType.equals(Inject.class)) {
                 continue;
@@ -39,7 +40,7 @@ public abstract class BindingFactory {
             if (!configPropertyAnnotation.isPresent()) {
                 throw new MissingConfigPropertyAnnotationException(rootClass);
             }
-            return Optional.of(new Pair<>((Inject) annotationClass, configPropertyAnnotation.get().property()));
+            return Optional.of(Pair.of((Inject) annotationClass, configPropertyAnnotation.get().property()));
         }
         return Optional.empty();
     }
@@ -61,9 +62,9 @@ public abstract class BindingFactory {
         }
         field.setAccessible(true);
         try {
-            final Object newInstance = binding_pair.right.isPresent() ? binding_pair.right.get() : binding_pair.left.newInstance();
+            final Object newInstance = binding_pair.getRight().isPresent() ? binding_pair.getRight().get() : binding_pair.getLeft().newInstance();
             field.set(
-                binding_pair.left.cast(newInstance),
+                binding_pair.getLeft().cast(newInstance),
                 value == null ? field.getType().newInstance() : field.getType().cast(value)
             );
         } catch (ClassCastException | InstantiationException e) {

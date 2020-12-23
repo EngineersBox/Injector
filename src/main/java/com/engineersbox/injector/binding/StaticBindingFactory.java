@@ -1,15 +1,10 @@
 package com.engineersbox.injector.binding;
 
-import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
-import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
-import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
 import com.engineersbox.injector.ConfigurationProperties;
-import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
-import com.engineersbox.injector.exceptions.NullObjectInjectionException;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.FileNotFoundException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -42,20 +37,20 @@ public class StaticBindingFactory extends BindingFactory {
 
     private void saturateClassFields(final Class<?> clazz) {
         final Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
+        for (final Field field : fields) {
             Optional<Pair<Inject, String>> hasAnnotation = getInjectorAnnotations(field, clazz);
             if (!hasAnnotation.isPresent()) {
                 continue;
             }
             final Pair<Inject, String> pair = hasAnnotation.get();
-            final String configPropertyValue = pair.right;
-            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), new Pair<>(clazz, Optional.empty()), pair.left.optional());
+            final String configPropertyValue = pair.getRight();
+            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), Pair.of(clazz, Optional.empty()), pair.getLeft().optional());
         }
     }
 
     @Override
     public void build() {
-        for (Class<?> clazz : this.requestedBindings) {
+        for (final Class<?> clazz : this.requestedBindings) {
             saturateClassFields(clazz);
         }
     }

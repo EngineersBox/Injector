@@ -54,10 +54,6 @@ public class StaticBindingFactoryTests {
         @ConfigProperty(property = "field3")
         @Inject
         private static String field3;
-
-        public String getField() {
-            return field3;
-        }
     }
 
     @Test
@@ -74,10 +70,6 @@ public class StaticBindingFactoryTests {
     static class Field4 {
         @Inject
         private static String field4;
-
-        public String getField() {
-            return field4;
-        }
     }
 
     @Test
