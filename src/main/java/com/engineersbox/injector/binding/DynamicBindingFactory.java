@@ -12,7 +12,7 @@ public class DynamicBindingFactory extends BindingFactory{
 
     public DynamicBindingFactory() {
         this.requestedBindings = new HashSet<>();
-        this.modifiersRequiredToExist = Collections.EMPTY_LIST;
+        this.modifiersRequiredToExist = Collections.emptyList();
         this.modifiersRequiredToNotExist = Collections.singletonList(Modifier.FINAL);
     }
 

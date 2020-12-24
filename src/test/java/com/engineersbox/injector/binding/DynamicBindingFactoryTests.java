@@ -143,10 +143,10 @@ public class DynamicBindingFactoryTests {
 
     @Test
     public void injectsDefaultConstructedObjectWhenMissingConfigPropertyAndIsOptional() throws IllegalAccessException, InstantiationException {
-        StaticBindingFactoryTests.Field7 source = new StaticBindingFactoryTests.Field7();
+        Field7 source = new Field7();
         new StaticBindingFactory()
                 .setInjectionSource("resources/dynamictests.properties")
-                .requestInjection(InjectionGroup.of(StaticBindingFactoryTests.Field7.class))
+                .requestInjection(InjectionGroup.of(Field7.class, source))
                 .build();
         Assertions.assertNotNull(source.getField());
         Assertions.assertEquals(source.getField(), String.class.newInstance());
