@@ -39,11 +39,16 @@ public abstract class BindingFactory {
             if (!annotationType.equals(Inject.class)) {
                 continue;
             }
+            final Inject injectAnnotation = (Inject) annotationClass;
             final Optional<ConfigProperty> configPropertyAnnotation = getConfigPropertyAnnotation(field);
-            if (!configPropertyAnnotation.isPresent()) {
+            if (!injectAnnotation.optional() && !configPropertyAnnotation.isPresent()) {
                 throw new MissingConfigPropertyAnnotationException(rootClass);
             }
-            return Optional.of(Pair.of((Inject) annotationClass, configPropertyAnnotation.get().property()));
+            String propertyValue = null;
+            if (configPropertyAnnotation.isPresent()) {
+                propertyValue = configPropertyAnnotation.get().property();
+            }
+            return Optional.of(Pair.of(injectAnnotation, propertyValue));
         }
         return Optional.empty();
     }
@@ -86,7 +91,7 @@ public abstract class BindingFactory {
             }
             final Pair<Inject, String> pair = hasAnnotation.get();
             final String configPropertyValue = pair.getRight();
-            setFieldWithValue(field, this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.getLeft().optional());
+            setFieldWithValue(field, configPropertyValue == null ? null : this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.getLeft().optional());
         }
     }
 

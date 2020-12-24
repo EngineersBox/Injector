@@ -124,4 +124,24 @@ public class StaticBindingFactoryTests {
                 .build());
         Assertions.assertEquals(source.getField(), "");
     }
+
+    static class Field7 {
+        @Inject(optional = true)
+        private static String field7 = null;
+
+        public String getField() {
+            return field7;
+        }
+    }
+
+    @Test
+    public void injectsDefaultConstructedObjectWhenMissingConfigPropertyAndIsOptional() throws IllegalAccessException, InstantiationException {
+        Field7 source = new Field7();
+        new StaticBindingFactory()
+            .setInjectionSource("resources/statictests.properties")
+            .requestInjection(InjectionGroup.of(Field7.class))
+            .build();
+        Assertions.assertNotNull(source.getField());
+        Assertions.assertEquals(source.getField(), String.class.newInstance());
+    }
 }

@@ -16,6 +16,10 @@ public final class ImmutableInjectionGroup extends InjectionGroup {
         return new ImmutableInjectionGroup(left, right);
     }
 
+    public static ImmutableInjectionGroup empty() {
+        return new ImmutableInjectionGroup(null, null);
+    }
+
     @Override
     public Class<?> getLeft() {
         return this.left;

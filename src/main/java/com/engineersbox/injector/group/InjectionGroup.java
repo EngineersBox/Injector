@@ -17,6 +17,10 @@ public abstract class InjectionGroup extends Pair<Class<?>, Optional<Object>> {
         return ImmutableInjectionGroup.of(left, Optional.of(right));
     }
 
+    public static InjectionGroup empty() {
+        return ImmutableInjectionGroup.empty();
+    }
+
     @Override
     public Class<?> getLeft() {
         return this.left;
