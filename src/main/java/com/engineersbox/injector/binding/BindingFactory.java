@@ -34,7 +34,7 @@ public abstract class BindingFactory {
     }
 
     Optional<Pair<Inject, String>> getInjectorAnnotations(final Field field, final Class<?> rootClass) {
-        for (final Annotation annotationClass : field.getAnnotations()) {
+        for (final Annotation annotationClass : field.getDeclaredAnnotations()) {
             final Class<? extends Annotation> annotationType = annotationClass.annotationType();
             if (!annotationType.equals(Inject.class)) {
                 continue;
