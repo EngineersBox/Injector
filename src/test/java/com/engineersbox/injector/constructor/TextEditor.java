@@ -10,7 +10,7 @@ public class TextEditor {
         this.spellChecker = spellChecker;
     }
 
-    public void makeSpellCheck(){
-        spellChecker.checkSpelling();
+    public String makeSpellCheck(){
+        return spellChecker.checkSpelling();
     }
 }

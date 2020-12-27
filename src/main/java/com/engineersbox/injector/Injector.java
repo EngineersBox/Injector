@@ -1,6 +1,8 @@
 package com.engineersbox.injector;
 
 import com.engineersbox.injector.annotations.Inject;
+import com.engineersbox.injector.exceptions.ConstructorInjectionException;
+import com.engineersbox.injector.exceptions.ConstructorParameterInvocationException;
 import com.engineersbox.injector.exceptions.InvalidConstructorParameterClassModifierException;
 import com.engineersbox.injector.modifiers.ModifierMapping;
 import com.engineersbox.injector.modifiers.ModifierRequirement;
@@ -55,21 +57,28 @@ public class Injector {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getInstance(final Class<T> clazz) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    public <T> T getInstance(final Class<T> clazz) {
         this.module.configure();
         final Constructor<?> constructor = this.getAnnotatedConstructors(clazz);
-        final Class<?>[] parameterTypes = constructor.getParameterTypes();
         final List<Object> parameters = new ArrayList<>();
-        for (Class<?> paramClass : parameterTypes) {
+        for (Class<?> paramClass : constructor.getParameterTypes()) {
             final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
-            if (moduleBinding.isPresent()) {
-                final Class<?> boundToClass = moduleBinding.get().boundTo;
-                this.verifyInstantiable(boundToClass);
-                parameters.add(boundToClass.newInstance());
+            if (!moduleBinding.isPresent()) {
+                parameters.add(null);
                 continue;
             }
-            parameters.add(null);
+            final Class<?> boundToClass = moduleBinding.get().boundTo;
+            this.verifyInstantiable(boundToClass);
+            try {
+                parameters.add(paramClass.cast(boundToClass.newInstance()));
+            } catch (InstantiationException | IllegalAccessException e) {
+                throw new ConstructorParameterInvocationException(clazz, constructor, e.getMessage());
+            }
         }
-        return (T) constructor.newInstance(parameters);
+        try {
+            return (T) constructor.newInstance(parameters.toArray());
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | IllegalArgumentException e) {
+            throw new ConstructorInjectionException(clazz, constructor, e.getMessage());
+        }
     }
 }
