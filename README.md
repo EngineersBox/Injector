@@ -77,40 +77,40 @@ public class Main {
 ## Constructor Injection
 
 ```java
+public class TextEditor {
+    private SpellChecker spellChecker;
+
+    @Inject
+    public TextEditor(SpellChecker spellChecker) {
+        this.spellChecker = spellChecker;
+    }
+
+    public String makeSpellCheck() {
+        return spellChecker.checkSpelling();
+    }
+}
+
+public class TextEditorModule extends AbstractModule {
+
+    @Override
+    public void configure() {
+        bind(SpellChecker.class).to(SpellCheckerImpl.class);
+    }
+}
+
+public interface SpellChecker {
+    void checkSpelling();
+}
+
+public class SpellCheckerImpl implements SpellChecker {
+
+    @Override
+    public void checkSpelling() {
+        return "Called checkSpelling()";
+    }
+}
+
 public class Main {
-    class TextEditor {
-        private SpellChecker spellChecker;
-
-        @Inject
-        public TextEditor(SpellChecker spellChecker) {
-            this.spellChecker = spellChecker;
-        }
-
-        public String makeSpellCheck() {
-            return spellChecker.checkSpelling();
-        }
-    }
-
-    class TextEditorModule extends AbstractModule {
-
-        @Override
-        public void configure() {
-            bind(SpellChecker.class).to(SpellCheckerImpl.class);
-        }
-    }
-
-    interface SpellChecker {
-        void checkSpelling();
-    }
-
-    class SpellCheckerImpl implements SpellChecker {
-
-        @Override
-        public void checkSpelling() {
-            return "Called checkSpelling()";
-        }
-    }
-    
    public static void main() {
       Injector injector = Injector.createInjector(new TextEditorModule());
       TextEditor editor = injector.getInstance(TextEditor.class);
