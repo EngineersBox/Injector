@@ -8,6 +8,7 @@ import com.engineersbox.injector.exceptions.FieldValueTypeCoercionException;
 import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
 import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
 import com.engineersbox.injector.exceptions.NullObjectInjectionException;
+import com.engineersbox.injector.modifiers.ModifierRequirement;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.annotation.Annotation;
@@ -17,8 +18,7 @@ import java.util.Optional;
 
 public abstract class BindingFactory {
 
-    List<Integer> modifiersRequiredToExist;
-    List<Integer> modifiersRequiredToNotExist;
+    ModifierRequirement modifierRequirement;
     ConfigurationProperties injectionSource;
 
     abstract BindingFactory setInjectionSource(final String filename);
@@ -53,19 +53,12 @@ public abstract class BindingFactory {
         return Optional.empty();
     }
 
-    private boolean satisfiesModifierConditions(final Field field) {
-        final int fieldModifiers = field.getModifiers();
-        final boolean requiredExist = this.modifiersRequiredToExist.stream().allMatch(i -> (fieldModifiers & i) != 0);
-        final boolean requiredNotExist = this.modifiersRequiredToNotExist.stream().allMatch(i -> (fieldModifiers & i) == 0);
-        return requiredExist && requiredNotExist;
-    }
-
     <T> void setFieldWithValue(final Field field, final T value, final InjectionGroup binding_pair, final boolean optional) {
         if (!optional && value == null) {
             throw new NullObjectInjectionException(field);
         }
 
-        if (!this.satisfiesModifierConditions(field)) {
+        if (!this.modifierRequirement.assertModifierCombination(field.getModifiers())) {
             throw new FinalFieldInjectionException(field, value);
         }
         field.setAccessible(true);

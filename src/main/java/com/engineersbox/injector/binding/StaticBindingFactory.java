@@ -2,6 +2,8 @@ package com.engineersbox.injector.binding;
 
 import com.engineersbox.injector.ConfigurationProperties;
 import com.engineersbox.injector.group.InjectionGroup;
+import com.engineersbox.injector.modifiers.ModifierMapping;
+import com.engineersbox.injector.modifiers.ModifierRequirement;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -12,8 +14,9 @@ public class StaticBindingFactory extends BindingFactory {
 
     public StaticBindingFactory(){
         this.requestedBindings = new HashSet<>();
-        this.modifiersRequiredToExist = Collections.singletonList(Modifier.STATIC);
-        this.modifiersRequiredToNotExist = Collections.singletonList(Modifier.FINAL);
+        this.modifierRequirement = new ModifierRequirement()
+            .setMustExist(ModifierMapping.STATIC)
+            .setMustNotExist(ModifierMapping.FINAL);
     }
 
     @Override

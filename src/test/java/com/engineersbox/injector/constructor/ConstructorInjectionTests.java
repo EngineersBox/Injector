@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 public class ConstructorInjectionTests {
 
     @Test
-    public void canInjectWithValidParams() throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException {
+    public void canInjectWithValidParams() throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Injector injector = Injector.createInjector(new TextEditorModule());
         TextEditor editor = injector.getInstance(TextEditor.class);
         editor.makeSpellCheck();

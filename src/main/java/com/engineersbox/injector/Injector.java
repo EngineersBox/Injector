@@ -2,19 +2,20 @@ package com.engineersbox.injector;
 
 import com.engineersbox.injector.annotations.Inject;
 import com.engineersbox.injector.exceptions.InvalidConstructorParameterClassModifierException;
+import com.engineersbox.injector.modifiers.ModifierMapping;
+import com.engineersbox.injector.modifiers.ModifierRequirement;
 import com.engineersbox.injector.module.AbstractModule;
 import com.engineersbox.injector.module.ModuleBinding;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.util.*;
 
 public class Injector {
 
     private final AbstractModule module;
-    private final Set<Integer> requiredNotExists = new HashSet<>(Modifier.ABSTRACT, Modifier.INTERFACE);
+    private final ModifierRequirement modifierRequirement = new ModifierRequirement().setMustNotExist(ModifierMapping.ABSTRACT, ModifierMapping.INTERFACE);
 
     private Injector(final AbstractModule module) {
         this.module = module;
@@ -48,7 +49,7 @@ public class Injector {
 
     private void verifyInstantiable(final Class<?> clazz) {
         final int modifiers = clazz.getModifiers();
-        if (this.requiredNotExists.stream().anyMatch(i -> (modifiers & i) == 0)) {
+        if (!this.modifierRequirement.assertModifierCombination(modifiers)) {
             throw new InvalidConstructorParameterClassModifierException(clazz);
         }
     }

@@ -2,6 +2,8 @@ package com.engineersbox.injector.binding;
 
 import com.engineersbox.injector.ConfigurationProperties;
 import com.engineersbox.injector.group.InjectionGroup;
+import com.engineersbox.injector.modifiers.ModifierMapping;
+import com.engineersbox.injector.modifiers.ModifierRequirement;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -12,8 +14,8 @@ public class DynamicBindingFactory extends BindingFactory{
 
     public DynamicBindingFactory() {
         this.requestedBindings = new HashSet<>();
-        this.modifiersRequiredToExist = Collections.emptyList();
-        this.modifiersRequiredToNotExist = Collections.singletonList(Modifier.FINAL);
+        this.modifierRequirement = new ModifierRequirement()
+            .setMustNotExist(ModifierMapping.FINAL);
     }
 
     @Override
