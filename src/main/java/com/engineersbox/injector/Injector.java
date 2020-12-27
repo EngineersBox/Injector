@@ -72,7 +72,7 @@ public class Injector {
             try {
                 parameters.add(paramClass.cast(boundToClass.newInstance()));
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new ConstructorParameterInvocationException(clazz, constructor, e.getMessage());
+                throw new ConstructorParameterInvocationException(paramClass, constructor, e.getMessage());
             }
         }
         try {
