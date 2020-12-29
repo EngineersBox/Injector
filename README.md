@@ -76,17 +76,30 @@ public class Main {
 
 ## Constructor Injection
 
+Properties file:
+```properties
+config_string=some config string
+```
+
+Injection code:
+
 ```java
 public class TextEditor {
     private SpellChecker spellChecker;
+    private String configString;
 
     @Inject
-    public TextEditor(SpellChecker spellChecker) {
+    public TextEditor(@ConfigProperty(property="config_string") String configString, SpellChecker spellChecker) {
+        this.configString = configString;
         this.spellChecker = spellChecker;
     }
 
     public String makeSpellCheck() {
         return spellChecker.checkSpelling();
+    }
+
+    public String getConfigString() {
+        return configString;
     }
 }
 
@@ -111,12 +124,16 @@ public class SpellCheckerImpl implements SpellChecker {
 }
 
 public class Main {
-   public static void main() {
-      Injector injector = Injector.createInjector(new TextEditorModule());
-      TextEditor editor = injector.getInstance(TextEditor.class);
-      
-      // Prints: Called checkSpelling()
-      System.out.println(editor.makeSpellCheck());
-   } 
+    public static void main() {
+        Injector injector = Injector.createInjector(new TextEditorModule())
+                .setInjectionSource("resources/configuration.properties");
+        TextEditor editor = injector.getInstance(TextEditor.class);
+
+        // Prints: Called checkSpelling()
+        System.out.println(editor.makeSpellCheck());
+        
+        // Prints: some config string
+        System.out.println(editor.getConfigString());
+    }
 }
 ```
