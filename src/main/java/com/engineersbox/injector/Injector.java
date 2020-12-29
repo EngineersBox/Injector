@@ -1,5 +1,6 @@
 package com.engineersbox.injector;
 
+import com.engineersbox.injector.annotations.AnnotationUtils;
 import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
 import com.engineersbox.injector.exceptions.ConstructorInjectionException;
@@ -11,9 +12,7 @@ import com.engineersbox.injector.module.AbstractModule;
 import com.engineersbox.injector.module.ModuleBinding;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Parameter;
+import java.lang.reflect.*;
 import java.util.*;
 
 public class Injector {
@@ -35,33 +34,10 @@ public class Injector {
         return this;
     }
 
-    private boolean hasInjectAnnotation(final Annotation[] annotations) {
-        for (final Annotation annotation : annotations) {
-            final Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (!annotationType.equals(Inject.class)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private boolean hasConfigPropertyAnnotation(final Annotation[] annotations) {
-        for (final Annotation annotation : annotations) {
-            final Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (!annotationType.equals(ConfigProperty.class)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-
     private Constructor<?> getAnnotatedConstructors(final Class<?> clazz) {
         final Constructor<?>[] constructors = clazz.getDeclaredConstructors();
         for (final Constructor<?> constructor : constructors) {
-            final Annotation[] annotations = constructor.getDeclaredAnnotations();
-            if (this.hasInjectAnnotation(annotations)) {
+            if (AnnotationUtils.hasAnnotation(constructor, Inject.class)) {
                 return constructor;
             }
         }
@@ -75,14 +51,24 @@ public class Injector {
         }
     }
 
-    private String getConfigPropertyValue(final Annotation[] annotations) {
-        for (final Annotation annotation : annotations) {
-            final Class<? extends Annotation> annotationType = annotation.annotationType();
-            if (annotationType.equals(ConfigProperty.class)) {
-                return ((ConfigProperty) annotation).property();
-            }
+    private Object instantiateParameter(final Parameter parameter, final Constructor<?> constructor) {
+        final Class<?> paramClass = parameter.getType();
+        final Optional<? extends Annotation> configPropertyAnnotation = AnnotationUtils.getAnnotation(parameter, ConfigProperty.class);
+        if (configPropertyAnnotation.isPresent()) {
+            final ConfigProperty configProperty = (ConfigProperty) configPropertyAnnotation.get();
+            return paramClass.cast(this.injectionSource.properties.getProperty(configProperty.property()));
         }
-        return null;
+        final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
+        if (!moduleBinding.isPresent()) {
+            return null;
+        }
+        final Class<?> boundToClass = moduleBinding.get().boundTo;
+        this.verifyInstantiable(boundToClass);
+        try {
+            return paramClass.cast(boundToClass.newInstance());
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new ConstructorParameterInvocationException(paramClass, constructor, e.getMessage());
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -91,23 +77,7 @@ public class Injector {
         final Constructor<?> constructor = this.getAnnotatedConstructors(clazz);
         final List<Object> parameters = new ArrayList<>();
         for (Parameter parameter : constructor.getParameters()) {
-            final Class<?> paramClass = parameter.getType();
-            if (this.hasConfigPropertyAnnotation(parameter.getAnnotations())) {
-                parameters.add(paramClass.cast(this.injectionSource.properties.getProperty(this.getConfigPropertyValue(parameter.getAnnotations()))));
-                continue;
-            }
-            final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
-            if (!moduleBinding.isPresent()) {
-                parameters.add(null);
-                continue;
-            }
-            final Class<?> boundToClass = moduleBinding.get().boundTo;
-            this.verifyInstantiable(boundToClass);
-            try {
-                parameters.add(paramClass.cast(boundToClass.newInstance()));
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new ConstructorParameterInvocationException(paramClass, constructor, e.getMessage());
-            }
+            parameters.add(this.instantiateParameter(parameter, constructor));
         }
         try {
             return (T) constructor.newInstance(parameters.toArray());
