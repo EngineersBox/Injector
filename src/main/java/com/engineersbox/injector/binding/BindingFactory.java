@@ -10,6 +10,7 @@ import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
 import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
 import com.engineersbox.injector.exceptions.NullObjectInjectionException;
 import com.engineersbox.injector.modifiers.ModifierRequirement;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.lang.annotation.Annotation;
@@ -74,7 +75,7 @@ public abstract class BindingFactory {
                 continue;
             }
             final Pair<Inject, String> pair = hasAnnotation.get();
-            final String configPropertyValue = pair.getRight();
+            final String configPropertyValue = StringUtils.isEmpty(pair.getRight()) ? field.getName() : pair.getRight();
             setFieldWithValue(field, configPropertyValue == null ? null : this.injectionSource.properties.getProperty(configPropertyValue), binding_pair, pair.getLeft().optional());
         }
     }

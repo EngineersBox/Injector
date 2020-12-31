@@ -9,9 +9,11 @@ A Java dependency injection library supporting both static and dynamic injection
 Properties file:
 ```properties
 field1=some injection content
+field2=other content
 ```
 
 Injection code:
+
 ```java
 public class Main {
     class InjectTo {
@@ -19,20 +21,31 @@ public class Main {
         @Inject
         private static String field1;
 
-        public String getField() {
+        @ConfigProperty
+        @Inject
+        private static String field2;
+
+        public String getField1() {
             return field1;
         }
+
+        public String getField2() {
+            return field2;
+        }
     }
-    
+
     public static void main() {
         InjectTo source = new InjectTo();
         new StaticBindingFactory()
                 .setInjectionSource("resources/configuration.properties")
                 .requestInjection(InjectionGroup.of(InjectTo.class))
                 .build();
-        
+
         // Prints: some injection content
-        System.out.println(source.getField());
+        System.out.println(source.getField1());
+        
+        // Prints: other content
+        System.out.println(source.getField2());
     }
 }
 ```
@@ -42,6 +55,7 @@ public class Main {
 Properties file:
 ```properties
 field1=some injection content
+field2=other content
 ```
 
 Injection code:
@@ -52,8 +66,16 @@ public class Main {
         @Inject
         private String field1;
 
-        public String getField() {
+        @ConfigProperty
+        @Inject
+        private String field2;
+
+        public String getField1() {
             return field1;
+        }
+
+        public String getField2() {
+            return field2;
         }
     }
     
@@ -66,10 +88,16 @@ public class Main {
                 .build();
         
         // Prints: some injection content
-        System.out.println(source.getField());
+        System.out.println(source.getField1());
+
+        // Prints: other content
+        System.out.println(source.getField2());
         
         // Prints: null
-        System.out.println(otherSource.getField());
+        System.out.println(otherSource.getField1());
+
+        // Prints: null
+        System.out.println(otherSource.getField2());
     }
 }
 ```

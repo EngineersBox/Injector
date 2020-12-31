@@ -144,4 +144,24 @@ public class StaticBindingFactoryTests {
         Assertions.assertNotNull(source.getField());
         Assertions.assertEquals(source.getField(), String.class.newInstance());
     }
+
+    static class Field8 {
+        @ConfigProperty
+        @Inject
+        private static String field8 = null;
+
+        public String getField() {
+            return field8;
+        }
+    }
+
+    @Test
+    public void injectsValueBasedOnFieldNameWhenHasConfigPropertyWithNoFieldSpecified() {
+        Field8 source = new Field8();
+        new StaticBindingFactory()
+                .setInjectionSource("resources/statictests.properties")
+                .requestInjection(InjectionGroup.of(Field8.class))
+                .build();
+        Assertions.assertEquals(source.getField(), "field8");
+    }
 }
