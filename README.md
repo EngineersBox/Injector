@@ -165,3 +165,62 @@ public class Main {
     }
 }
 ```
+
+## Method Injection
+
+```Java
+class TextEditor {
+   private SpellChecker spellChecker;
+
+   @Inject
+   public TextEditor( SpellChecker spellChecker) {
+      this.spellChecker = spellChecker;
+   }
+
+   public void makeSpellCheck(){
+      spellChecker.checkSpelling();
+   } 
+}
+
+class TextEditorModule extends AbstractModule {
+
+   @Override
+   public void configure() { 
+      bind(String.class)
+         .annotatedWith(Names.named("JDBC"))
+         .toInstance("jdbc:mysql://localhost:5326/emp");
+   } 
+}
+
+@ImplementedBy(SpellCheckerImpl.class)
+interface SpellChecker {
+   public void checkSpelling();
+}
+
+class SpellCheckerImpl implements SpellChecker {
+ 
+   private String dbUrl;
+
+   public SpellCheckerImpl(){}
+   
+   @Inject 
+   public void setDbUrl(@Named("JDBC") String dbUrl){
+      this.dbUrl = dbUrl;
+   }
+
+   @Override
+   public void checkSpelling() { 
+       return "Called checkSpelling() with URL: " + dbUrl;
+   }
+}
+
+public class Main {
+    public static void main() {
+        Injector injector = Injector.createInjector(new TextEditorModule());
+        TextEditor editor = injector.getInstance(TextEditor.class);
+
+        // Prints: Called checkSpelling() with URL: jdbc:mysql://localhost:5326/emp
+        System.out.println(editor.makeSpellCheck());
+    }
+}
+```
