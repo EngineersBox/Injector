@@ -1,6 +1,6 @@
 package com.engineersbox.injector.module;
 
-import com.engineersbox.injector.exceptions.PreExistingClassBindingException;
+import com.engineersbox.injector.exceptions.module.PreExistingClassBindingException;
 
 import java.util.HashSet;
 import java.util.Optional;

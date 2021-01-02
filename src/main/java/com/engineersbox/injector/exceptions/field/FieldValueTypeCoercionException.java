@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.field;
 
 public class FieldValueTypeCoercionException extends RuntimeException{
     public FieldValueTypeCoercionException(final Object value, final Class<?> clazz) {

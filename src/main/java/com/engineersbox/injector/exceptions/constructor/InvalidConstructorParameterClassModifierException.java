@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.constructor;
 
 public class InvalidConstructorParameterClassModifierException extends RuntimeException {
     public InvalidConstructorParameterClassModifierException(final Class<?> clazz) {

@@ -5,7 +5,7 @@ import com.engineersbox.injector.annotations.Named;
 public class Names {
 
     public static Named named(final String name) {
-        return new NamedInst(name);
+        return new ImmutableNamed(name);
     }
 
 }

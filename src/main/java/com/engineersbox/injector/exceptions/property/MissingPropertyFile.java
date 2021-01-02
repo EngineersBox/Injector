@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.property;
 
 public class MissingPropertyFile extends RuntimeException {
     public MissingPropertyFile(final String filename) {

@@ -1,6 +1,6 @@
 package com.engineersbox.injector;
 
-import com.engineersbox.injector.exceptions.MissingPropertyFile;
+import com.engineersbox.injector.exceptions.property.MissingPropertyFile;
 
 import java.io.*;
 import java.util.Properties;

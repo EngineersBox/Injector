@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.constructor;
 
 import java.lang.reflect.Constructor;
 

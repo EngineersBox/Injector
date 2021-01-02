@@ -4,11 +4,11 @@ import com.engineersbox.injector.annotations.Named;
 
 import java.lang.annotation.Annotation;
 
-public class NamedInst implements Named {
+public class ImmutableNamed implements Named {
 
     private final String name;
 
-    public NamedInst(final String name) {
+    public ImmutableNamed(final String name) {
         this.name = name;
     }
 

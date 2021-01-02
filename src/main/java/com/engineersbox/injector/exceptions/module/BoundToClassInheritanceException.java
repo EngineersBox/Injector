@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.module;
 
 public class BoundToClassInheritanceException extends RuntimeException {
     public BoundToClassInheritanceException(final Class<?> binding, final Class<?> instancing) {

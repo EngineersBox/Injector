@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.property;
 
 public class MissingConfigPropertyAnnotationException extends RuntimeException {
     public MissingConfigPropertyAnnotationException(final Class<?> clazz) {

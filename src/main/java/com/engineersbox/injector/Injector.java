@@ -1,13 +1,17 @@
 package com.engineersbox.injector;
 
 import com.engineersbox.injector.annotations.*;
-import com.engineersbox.injector.exceptions.ConstructorInjectionException;
-import com.engineersbox.injector.exceptions.ConstructorParameterInvocationException;
-import com.engineersbox.injector.exceptions.InvalidConstructorParameterClassModifierException;
+import com.engineersbox.injector.exceptions.constructor.ConstructorInjectionException;
+import com.engineersbox.injector.exceptions.constructor.ConstructorParameterInvocationException;
+import com.engineersbox.injector.exceptions.constructor.InvalidConstructorParameterClassModifierException;
+import com.engineersbox.injector.exceptions.method.InjectedMethodInvocationException;
+import com.engineersbox.injector.exceptions.method.MethodParameterInvocationException;
+import com.engineersbox.injector.exceptions.module.NamedModuleBindingException;
 import com.engineersbox.injector.modifiers.ModifierMapping;
 import com.engineersbox.injector.modifiers.ModifierRequirement;
 import com.engineersbox.injector.module.AbstractModule;
 import com.engineersbox.injector.module.ModuleBinding;
+import com.engineersbox.injector.module.ModuleBindingType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.*;
@@ -62,8 +66,7 @@ public class Injector {
         if (named.value().equals(moduleBinding.annotatedWith.value())) {
             return moduleBinding.bindingClassInstance;
         }
-        // TODO: Throw custom exception
-        throw new RuntimeException("Named annotation does not match annotation binding in ModuleBinding: " + named.value() + " != " + moduleBinding.annotatedWith.value());
+        throw new NamedModuleBindingException(named, moduleBinding);
     }
 
     private Object instantiateMethodParameter(final Parameter parameter, final Method method) {
@@ -72,22 +75,17 @@ public class Injector {
         if (namedAnnotation.isPresent()) {
             final Named named = (Named) namedAnnotation.get();
             final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
-            if (moduleBinding.isPresent() && moduleBinding.get().annotatedWith != null) {
+            if (moduleBinding.isPresent() && moduleBinding.get().validateAsBindingType(ModuleBindingType.INSTANCE_AND_ANNOTATION)) {
                 return paramClass.cast(this.validateAndReturnFromNamedAnnotation(named, moduleBinding.get()));
             }
         }
         try {
             final Constructor<?> parameterConstructor = paramClass.getConstructor();
             return parameterConstructor.newInstance();
-        } catch (NoSuchMethodException e) {
-            // TODO: Throw custom exception
-            throw new RuntimeException("No default constructor exists for: " + paramClass.getName());
+        } catch (NoSuchMethodException | InstantiationException | InvocationTargetException e) {
+            throw new MethodParameterInvocationException(paramClass);
         } catch (IllegalAccessException e) {
-            // TODO: Throw custom method since method is private/protected/etc
-            throw new RuntimeException("Could no invoke constructor [" + method.getName() + "] as it is inaccessible with modifiers: " + method.getModifiers());
-        } catch (InstantiationException | InvocationTargetException e) {
-            // TODO: Throw custom exception
-            throw new RuntimeException("Could not instantiate default constructor for: " + paramClass.getName());
+            throw new MethodParameterInvocationException(method);
         }
     }
 
@@ -103,11 +101,9 @@ public class Injector {
             try {
                 method.invoke(instance, parameters.toArray());
             } catch (IllegalAccessException e) {
-                // TODO: Throw custom method since method is private/protected/etc
-                throw new RuntimeException("Could no invoke method [" + method.getName() + "] as it is inaccessible with modifiers: " + method.getModifiers());
+                throw new InjectedMethodInvocationException(method);
             } catch (InvocationTargetException e) {
-                // TODO: Throw custom method since method was thrown during invocation from within method
-                throw new RuntimeException("Method threw an exception [" + e.getTargetException() + "] whilst attempting to invoke: " + e.getMessage());
+                throw new InjectedMethodInvocationException(method, e);
             }
         }
         return instance;

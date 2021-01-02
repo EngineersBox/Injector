@@ -2,8 +2,8 @@ package com.engineersbox.injector.modifiers;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class ModifierRequirement {
 
@@ -25,13 +25,10 @@ public class ModifierRequirement {
         return this;
     }
 
-    private Set<Integer> convertModifiersToHex(final Set<ModifierMapping> modifiers) {
-        return modifiers.stream().map(ModifierMapping::hexValue).collect(Collectors.toSet());
-    }
-
     public boolean assertModifierCombination(final int modifiers) {
-        final boolean existsValid = this.convertModifiersToHex(this.requiredToExist).stream().allMatch(i -> (modifiers & i) != 0);
-        final boolean notExistsValid = this.convertModifiersToHex(this.requiredToNotExist).stream().allMatch(i -> (modifiers & i) == 0);
+        final List<ModifierMapping> mapping = ModifierMapping.toModifierList(modifiers);
+        final boolean existsValid = mapping.containsAll(this.requiredToExist);
+        final boolean notExistsValid = this.requiredToNotExist.stream().noneMatch(mapping::contains);
         return existsValid && notExistsValid;
     }
 

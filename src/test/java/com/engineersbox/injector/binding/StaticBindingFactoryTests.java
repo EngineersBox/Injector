@@ -3,9 +3,9 @@ package com.engineersbox.injector.binding;
 import com.engineersbox.injector.group.InjectionGroup;
 import com.engineersbox.injector.annotations.ConfigProperty;
 import com.engineersbox.injector.annotations.Inject;
-import com.engineersbox.injector.exceptions.FinalFieldInjectionException;
-import com.engineersbox.injector.exceptions.MissingConfigPropertyAnnotationException;
-import com.engineersbox.injector.exceptions.NullObjectInjectionException;
+import com.engineersbox.injector.exceptions.field.FinalFieldInjectionException;
+import com.engineersbox.injector.exceptions.property.MissingConfigPropertyAnnotationException;
+import com.engineersbox.injector.exceptions.field.NullObjectInjectionException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

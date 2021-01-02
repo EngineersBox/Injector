@@ -1,7 +1,10 @@
 package com.engineersbox.injector.module;
 
 import com.engineersbox.injector.annotations.Named;
-import com.engineersbox.injector.exceptions.BoundToClassInheritanceException;
+import com.engineersbox.injector.exceptions.module.BoundToClassInheritanceException;
+import com.engineersbox.injector.exceptions.module.ModuleBindingClassInstanceException;
+import com.engineersbox.injector.exceptions.module.NamedModuleBindingException;
+import org.apache.commons.lang3.StringUtils;
 
 public class ModuleBinding {
 
@@ -27,16 +30,34 @@ public class ModuleBinding {
     }
 
     public ModuleBinding annotatedWith(final Named annotatedWith) {
-        // TODO: Check that there is a name stored in the Named instance
+        if (StringUtils.isEmpty(annotatedWith.value())) {
+            throw new NamedModuleBindingException(annotatedWith);
+        }
         this.annotatedWith = annotatedWith;
         return this;
     }
 
     public <T> void toInstance(final T bindingInstanceValue) {
         try {
-            this.bindingClassInstance = bindingClass.cast(bindingInstanceValue);
+            this.bindingClassInstance = this.bindingClass.cast(bindingInstanceValue);
         } catch (ClassCastException e) {
-            // TODO: Throw custom exception
+            throw new ModuleBindingClassInstanceException(this.bindingClass, bindingInstanceValue);
+        }
+    }
+
+    public boolean validateAsBindingType(final ModuleBindingType bindingType) {
+        switch (bindingType) {
+            case INTERFACE_AND_IMPLEMENTATION:
+                return this.bindingClass != null
+                        && this.bindingClass.isInterface()
+                        && this.implementationClass.isAssignableFrom(this.bindingClass);
+            case INSTANCE_AND_ANNOTATION:
+                return this.bindingClass != null
+                        && !this.bindingClass.isInterface()
+                        && this.bindingClass.isInstance(this.bindingClassInstance)
+                        && this.annotatedWith != null;
+            default:
+                return false;
         }
     }
 

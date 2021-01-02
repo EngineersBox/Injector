@@ -1,4 +1,4 @@
-package com.engineersbox.injector.exceptions;
+package com.engineersbox.injector.exceptions.module;
 
 public class NonInterfaceBindingClassException extends RuntimeException {
     public NonInterfaceBindingClassException(final Class<?> clazz) {
