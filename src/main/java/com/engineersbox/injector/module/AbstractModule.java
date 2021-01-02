@@ -1,6 +1,5 @@
 package com.engineersbox.injector.module;
 
-import com.engineersbox.injector.exceptions.NonInterfaceBindingClassException;
 import com.engineersbox.injector.exceptions.PreExistingClassBindingException;
 
 import java.util.HashSet;
@@ -14,12 +13,9 @@ public abstract class AbstractModule {
     public abstract void configure();
 
     private void validateBinding(final Class<?> binding_class) {
-        if (!binding_class.isInterface()) {
-            throw new NonInterfaceBindingClassException(binding_class);
-        }
         final Optional<ModuleBinding> binding_to_existing = this.getModuleBindingForBindingClass(binding_class);
         if (binding_to_existing.isPresent()) {
-            throw new PreExistingClassBindingException(binding_class, binding_to_existing.get().boundTo);
+            throw new PreExistingClassBindingException(binding_class, binding_to_existing.get().implementationClass);
         }
     }
 

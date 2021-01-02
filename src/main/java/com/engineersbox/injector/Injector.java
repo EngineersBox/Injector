@@ -1,8 +1,6 @@
 package com.engineersbox.injector;
 
-import com.engineersbox.injector.annotations.AnnotationUtils;
-import com.engineersbox.injector.annotations.ConfigProperty;
-import com.engineersbox.injector.annotations.Inject;
+import com.engineersbox.injector.annotations.*;
 import com.engineersbox.injector.exceptions.ConstructorInjectionException;
 import com.engineersbox.injector.exceptions.ConstructorParameterInvocationException;
 import com.engineersbox.injector.exceptions.InvalidConstructorParameterClassModifierException;
@@ -51,7 +49,71 @@ public class Injector {
         }
     }
 
-    private Object instantiateParameter(final Parameter parameter, final Constructor<?> constructor) {
+    private Optional<Class<?>> checkForImplementedByAnnotation(final Class<?> clazz) {
+        final Optional<? extends Annotation> annotation = AnnotationUtils.getAnnotation(clazz, ImplementedBy.class);
+        if (!annotation.isPresent()) {
+            return Optional.empty();
+        }
+        final ImplementedBy implementedBy = (ImplementedBy) annotation.get();
+        return Optional.of(implementedBy.value());
+    }
+
+    private Object validateAndReturnFromNamedAnnotation(final Named named, final ModuleBinding moduleBinding) {
+        if (named.value().equals(moduleBinding.annotatedWith.value())) {
+            return moduleBinding.bindingClassInstance;
+        }
+        // TODO: Throw custom exception
+        throw new RuntimeException("Named annotation does not match annotation binding in ModuleBinding: " + named.value() + " != " + moduleBinding.annotatedWith.value());
+    }
+
+    private Object instantiateMethodParameter(final Parameter parameter, final Method method) {
+        final Class<?> paramClass = parameter.getType();
+        final Optional<? extends Annotation> namedAnnotation = AnnotationUtils.getAnnotation(parameter, Named.class);
+        if (namedAnnotation.isPresent()) {
+            final Named named = (Named) namedAnnotation.get();
+            final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
+            if (moduleBinding.isPresent() && moduleBinding.get().annotatedWith != null) {
+                return paramClass.cast(this.validateAndReturnFromNamedAnnotation(named, moduleBinding.get()));
+            }
+        }
+        try {
+            final Constructor<?> parameterConstructor = paramClass.getConstructor();
+            return parameterConstructor.newInstance();
+        } catch (NoSuchMethodException e) {
+            // TODO: Throw custom exception
+            throw new RuntimeException("No default constructor exists for: " + paramClass.getName());
+        } catch (IllegalAccessException e) {
+            // TODO: Throw custom method since method is private/protected/etc
+            throw new RuntimeException("Could no invoke constructor [" + method.getName() + "] as it is inaccessible with modifiers: " + method.getModifiers());
+        } catch (InstantiationException | InvocationTargetException e) {
+            // TODO: Throw custom exception
+            throw new RuntimeException("Could not instantiate default constructor for: " + paramClass.getName());
+        }
+    }
+
+    private <T> T performMethodInjectionOnInstance(final T instance, final Class<?> clazz) {
+        for (final Method method : clazz.getDeclaredMethods()) {
+            if (!AnnotationUtils.hasAnnotation(method, Inject.class)) {
+                continue;
+            }
+            final List<Object> parameters = new ArrayList<>();
+            for (final Parameter parameter : method.getParameters()) {
+                parameters.add(this.instantiateMethodParameter(parameter, method));
+            }
+            try {
+                method.invoke(instance, parameters.toArray());
+            } catch (IllegalAccessException e) {
+                // TODO: Throw custom method since method is private/protected/etc
+                throw new RuntimeException("Could no invoke method [" + method.getName() + "] as it is inaccessible with modifiers: " + method.getModifiers());
+            } catch (InvocationTargetException e) {
+                // TODO: Throw custom method since method was thrown during invocation from within method
+                throw new RuntimeException("Method threw an exception [" + e.getTargetException() + "] whilst attempting to invoke: " + e.getMessage());
+            }
+        }
+        return instance;
+    }
+
+    private Object instantiateConstructorParameter(final Parameter parameter, final Constructor<?> constructor) {
         final Class<?> paramClass = parameter.getType();
         final Optional<? extends Annotation> configPropertyAnnotation = AnnotationUtils.getAnnotation(parameter, ConfigProperty.class);
         if (configPropertyAnnotation.isPresent()) {
@@ -59,13 +121,19 @@ public class Injector {
             return paramClass.cast(this.injectionSource.properties.getProperty(configProperty.property()));
         }
         final Optional<ModuleBinding> moduleBinding = this.module.getModuleBindingForBindingClass(paramClass);
+        Class<?> implementationClass;
         if (!moduleBinding.isPresent()) {
-            return null;
+            final Optional<Class<?>> implementedBy = this.checkForImplementedByAnnotation(paramClass);
+            if (!implementedBy.isPresent()) {
+                return null;
+            }
+            implementationClass = implementedBy.get();
+        } else {
+            implementationClass = moduleBinding.get().implementationClass;
         }
-        final Class<?> boundToClass = moduleBinding.get().boundTo;
-        this.verifyInstantiable(boundToClass);
+        this.verifyInstantiable(implementationClass);
         try {
-            return paramClass.cast(boundToClass.newInstance());
+            return paramClass.cast(this.performMethodInjectionOnInstance(implementationClass.newInstance(), implementationClass));
         } catch (InstantiationException | IllegalAccessException e) {
             throw new ConstructorParameterInvocationException(paramClass, constructor, e.getMessage());
         }
@@ -76,8 +144,8 @@ public class Injector {
         this.module.configure();
         final Constructor<?> constructor = this.getAnnotatedConstructors(clazz);
         final List<Object> parameters = new ArrayList<>();
-        for (Parameter parameter : constructor.getParameters()) {
-            parameters.add(this.instantiateParameter(parameter, constructor));
+        for (final Parameter parameter : constructor.getParameters()) {
+            parameters.add(this.instantiateConstructorParameter(parameter, constructor));
         }
         try {
             return (T) constructor.newInstance(parameters.toArray());
