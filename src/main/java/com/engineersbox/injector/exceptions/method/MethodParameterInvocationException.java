@@ -2,7 +2,7 @@ package com.engineersbox.injector.exceptions.method;
 
 import java.lang.reflect.Method;
 
-public class MethodParameterInvocationException extends RuntimeException {
+public class MethodParameterInvocationException extends InjectorMethodException {
     public MethodParameterInvocationException(final Class<?> paramClass) {
         super("Could not instantiate default constructor for: " + paramClass.getName());
     }

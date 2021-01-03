@@ -15,8 +15,7 @@ public class SpellCheckerImpl implements SpellChecker {
     }
 
     @Override
-    public void checkSpelling() {
-        System.out.println("Inside checkSpelling." );
-        System.out.println(dbUrl);
+    public String checkSpelling() {
+        return "Called checkSpelling() with URL: " + this.dbUrl;
     }
 }
